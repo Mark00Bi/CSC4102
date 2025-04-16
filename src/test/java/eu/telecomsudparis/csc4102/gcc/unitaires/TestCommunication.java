@@ -59,7 +59,7 @@ class TestCommunication {
     void testConstructeurValide() throws OperationImpossible {
         Communication c = new Communication("c1", "Titre", "Résumé", "Contenu", LocalDate.now());
         c.ajouterAuteurs(auteur);
-        assertEquals(État.Brouillon, c.getEtat());
+        assertEquals(ÉtatCommunication.Brouillon, c.getEtat());
         assertTrue(c.getAuteurs().contains(auteur));
     }
 
@@ -109,7 +109,7 @@ class TestCommunication {
         // État = BROUILLON → invalide
         presidente.ajouterEvaluateur(evaluatrice);
         assertThrows(OperationImpossible.class, () -> {
-            if (!c.getEtat().equals(État.Soumise) && !c.getEtat().equals(État.En_Evaluation)) {
+            if (!c.getEtat().equals(ÉtatCommunication.Soumise) && !c.getEtat().equals(ÉtatCommunication.En_Evaluation)) {
                 throw new OperationImpossible("État non autorisé");
             }
         });
