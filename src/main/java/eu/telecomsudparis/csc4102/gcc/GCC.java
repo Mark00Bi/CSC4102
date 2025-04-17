@@ -9,10 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import eu.telecomsudparis.csc4102.util.Datutil;
 import eu.telecomsudparis.csc4102.util.OperationImpossible;
-import eu.telecomsudparis.csc4102.gcc.ÉtatCommunication;
-
 
 /**
  * Cette classe est la façade du logiciel.
@@ -157,26 +154,7 @@ public class GCC {
     public String getDateFinConference() {
         return dateFinConference.toString();
     }
-    
-    /**
-     * Définit une nouvelle date limite pour la soumission des communications.
-     *
-     * @param date la nouvelle date limite de soumission
-     */
-    
-    public void setdateLimiteSoumission(final LocalDate date) {
-    	this.dateLimiteSoumission = date;
-    }
-    
-    /**
-     * Définit une nouvelle date pour l'annonce des décisions.
-     *
-     * @param date la nouvelle date d'annonce des décisions
-     */
-    
-    public void setdateAnnonceDecisions(final LocalDate date) {
-    	this.dateAnnonceDecisions = date;
-    }
+
 
     /**
      * ajoute une présidente. Le système n'est pas ouvert pour la présidente, mais
@@ -255,37 +233,49 @@ public class GCC {
      *                              - identifiant de communication déjà existant.
      */
     public void soumettreCommunication(final String idAuteur, final String idComm,
-    		final String titre, final String resume, final String contenu, final LocalDate dateSoumission) throws OperationImpossible {
+            final String titre, final String resume, final String contenu, 
+            final LocalDate dateSoumission) throws OperationImpossible {
 
-    		if (idAuteur == null || idAuteur.isBlank()) {
-    			throw new OperationImpossible("L'identifiant de l'auteur est invalide.");
-    		}
+        // Vérification groupée des champs requis (non null et non vides)
+        if (idAuteur == null || idAuteur.isBlank() ||
+            idComm == null || idComm.isBlank() ||
+            titre == null || titre.isBlank() ||
+            resume == null || resume.isBlank() ||
+            contenu == null || contenu.isBlank() ||
+            dateSoumission == null) {
+            
+            throw new OperationImpossible("Un ou plusieurs champs requis sont invalides (null ou vides).");
+        }
 
-    		Utilisateur auteur = utilisateurs.get(idAuteur);
-    		if (auteur == null || !(auteur instanceof Auteur)) {
-    			throw new OperationImpossible("L'utilisateur spécifié n'est pas un auteur.");
-    		}
+        // Auteur existant avec cet identificateur
+        Utilisateur u = utilisateurs.get(idAuteur);
+        if (u == null || !(u instanceof Auteur)) {
+            throw new OperationImpossible("L'utilisateur n'existe pas ou n'est pas un auteur.");
+        }
+        Auteur auteur = (Auteur) u;
 
-    		if (idComm == null || idComm.isBlank() || communications.containsKey(idComm)) {
-    			throw new OperationImpossible("Identifiant de communication invalide ou déjà utilisé.");
-    		}
+        // Pas de communication avec le même identifiant
+        if (communications.containsKey(idComm)) {
+            throw new OperationImpossible("Une communication avec cet identifiant existe déjà.");
+        }
 
-    		if (titre == null || titre.isBlank() 
-    				|| resume == null || resume.isBlank() 
-    				|| contenu == null || contenu.isBlank()) {
-    			throw new OperationImpossible("Titre, résumé ou contenu non valides.");
-    		}
+        // Date actuelle inférieure ou égale à la date de soumission
+        if (LocalDate.now().isAfter(dateSoumission)) {
+            throw new OperationImpossible("La date de soumission ne peut pas être dans le passé.");
+        }
 
-    		if (dateSoumission.isAfter(dateLimiteSoumission)) {
-    			throw new OperationImpossible("La date de soumission dépasse la date limite.");
-    		}
+        if (dateSoumission.isAfter(dateLimiteSoumission)) {
+            throw new OperationImpossible("La date de soumission dépasse la date limite.");
+        }
 
-    		Communication comm = new Communication(idComm, titre, resume, contenu, dateSoumission);
-    		comm.ajouterAuteurs(auteur);
-    		comm.soumettre();
+        // Création et soumission
+        Communication comm = new Communication(idComm, titre, resume, contenu, dateSoumission);
+        comm.ajouterAuteurs(auteur);
+        comm.soumettre();
 
-    		communications.put(idComm, comm);
-    		assert invariant();
+        communications.put(idComm, comm);
+
+        assert invariant();
     }
 
 
@@ -314,56 +304,65 @@ public class GCC {
      * @param idEvaluatrice l'identifiant de l'évaluatrice.
      * @throws OperationImpossible en cas de violation des préconditions.
      */
-    public void ajouterEvaluatriceACommunication(final String idCommunication, final String idEvaluatrice) throws OperationImpossible {
-        // Vérifier l'existence de la présidente
+    public void ajouterEvaluatriceACommunication(final String idCommunication, final String idEvaluatrice) 
+            throws OperationImpossible {
+
+        // Présidente existe dans le système
         if (presidente == null) {
-            throw new OperationImpossible("Aucune présidente n’est définie.");
+            throw new OperationImpossible("Aucune présidente n'est définie.");
         }
 
-        // Vérifier l'existence de la communication
+        // Vérification groupée des paramètres requis
+        if (idCommunication == null || idCommunication.isBlank() ||
+            idEvaluatrice == null || idEvaluatrice.isBlank()) {
+            throw new OperationImpossible("Un ou plusieurs identifiants sont invalides (null ou vides).");
+        }
+
+        // Communication existe dans le système
         Communication comm = communications.get(idCommunication);
         if (comm == null) {
             throw new OperationImpossible("Communication introuvable.");
         }
 
-        // Vérifier l'ÉtatCommunication de la communication
-        if (!(comm.getEtat().equals(ÉtatCommunication.Soumise) || comm.getEtat().equals(ÉtatCommunication.En_Evaluation))) {
-            throw new OperationImpossible("La communication n’est pas dans un ÉtatCommunication permettant l’évaluation.");
+        // Communication dans un état valide
+        if (!(comm.getEtat().equals(ÉtatCommunication.Soumise) || 
+              comm.getEtat().equals(ÉtatCommunication.En_Evaluation))) {
+            throw new OperationImpossible("La communication n'est pas dans un état permettant d'ajouter une évaluatrice.");
         }
 
-        // Vérifier l'existence et le rôle de l’évaluatrice
+        // Évaluatrice existe et est bien un évaluateur
         Utilisateur u = utilisateurs.get(idEvaluatrice);
         if (u == null || !(u instanceof Evaluateur)) {
-            throw new OperationImpossible("L’utilisateur n’est pas une évaluatrice valide.");
+            throw new OperationImpossible("L'utilisateur n'est pas une évaluatrice valide.");
         }
         Evaluateur evaluatrice = (Evaluateur) u;
 
-        // Vérifier que l’évaluatrice fait partie du comité
-        if (!presidente.contientEvaluateur(evaluatrice)) {
-            throw new OperationImpossible("L’évaluatrice n’est pas membre du comité.");
-        }
-
-        // Vérifier que l’évaluatrice n’est pas un(e) auteur(e) de la communication
+        // L’évaluatrice n’est pas une autrice de la communication
         if (comm.getAuteurs().stream().anyMatch(a -> a.getIdentificateur().equals(evaluatrice.getIdentificateur()))) {
-            throw new OperationImpossible("L’évaluatrice est aussi autrice de cette communication.");
+            throw new OperationImpossible("L'évaluatrice est aussi autrice de cette communication.");
         }
 
+        // L’évaluatrice est bien dans le comité
+        if (!presidente.contientEvaluateur(evaluatrice)) {
+            throw new OperationImpossible("L'évaluatrice n'est pas membre du comité.");
+        }
 
-        // Vérifier qu'elle n’est pas déjà affectée
+        // L’évaluatrice n’est pas déjà assignée
         if (presidente.estAssigneA(evaluatrice, comm)) {
-            throw new OperationImpossible("L’évaluatrice est déjà affectée à cette communication.");
+            throw new OperationImpossible("L'évaluatrice est déjà affectée à cette communication.");
         }
 
         // Affectation
         presidente.affecterEvaluateur(evaluatrice, comm);
 
-        // Si l'ÉtatCommunication est encore Soumise → on passe à En_Evaluation
+        // Activation de l’évaluation si c’est la première affectation
         if (comm.getEtat().equals(ÉtatCommunication.Soumise)) {
             comm.activerEvaluation();
         }
 
         assert invariant();
     }
+
     
     /**
      * Permet à une évaluatrice affectée de soumettre une évaluation sur une communication.
@@ -383,43 +382,67 @@ public class GCC {
      * @param rapport      le contenu du rapport d’évaluation.
      * @throws OperationImpossible si une des vérifications échoue.
      */
-    public void ajouterEvaluation(final String idComm, final String idEvaluateur, final Avis avis, final String rapport) throws OperationImpossible {
-        
-    	// On vérifie que la communication existe
-    	if (idComm == null || idComm.isBlank() || !communications.containsKey(idComm)) {
+     public void ajouterEvaluation(final String idComm, final String idEvaluateur, final Avis avis, 
+            final String rapport, final LocalDate dateEvaluation) 
+            throws OperationImpossible {
+
+        // Présidente existe dans le système
+        if (presidente == null) {
+            throw new OperationImpossible("Aucune présidente n’est définie.");
+        }
+
+        // Vérification groupée des champs requis (non null / non vides)
+        if (idComm == null || idComm.isBlank() ||
+            idEvaluateur == null || idEvaluateur.isBlank() ||
+            rapport == null || rapport.isBlank() ||
+            dateEvaluation == null) {
+            throw new OperationImpossible("Un ou plusieurs paramètres sont invalides (null ou vides).");
+        }
+
+        // Communication existe
+        if (!communications.containsKey(idComm)) {
             throw new OperationImpossible("Communication introuvable.");
         }
         Communication comm = communications.get(idComm);
 
-        // On vérifie que l'évaluateur est bien un évaluateur
+        // Évaluateur existe
+        if (!utilisateurs.containsKey(idEvaluateur)) {
+            throw new OperationImpossible("Évaluateur introuvable.");
+        }
+
         Utilisateur u = utilisateurs.get(idEvaluateur);
-        if (u == null || !(u instanceof Evaluateur)) {
-            throw new OperationImpossible("Évaluateur invalide.");
+        if (!(u instanceof Evaluateur)) {
+            throw new OperationImpossible("L'utilisateur n'est pas un évaluateur.");
         }
         Evaluateur evaluateur = (Evaluateur) u;
 
-        // On vérifie qu'il y'a un président dans le système
+        // Évaluateur affecté à cette communication
         if (!presidente.estAssigneA(evaluateur, comm)) {
-            throw new OperationImpossible("L’évaluateur n’est pas affecté à cette communication.");
+            throw new OperationImpossible("L'évaluateur n'est pas affecté à cette communication.");
         }
 
-        // On vérifie que l'évluation est dans un ÉtatCommunication permettant de l'évaluer
+        // État de la communication
         if (!comm.getEtat().equals(ÉtatCommunication.En_Evaluation)) {
             throw new OperationImpossible("La communication n'est pas en cours d'évaluation.");
         }
-        
-        // On vérifie si on est dans les délais pour effectuer une évaluation
-        LocalDate dateEvaluation = Datutil.aujourdhui();
-        if (dateEvaluation.isBefore(dateLimiteSoumission) || !dateEvaluation.isBefore(dateAnnonceDecisions)) {
-            throw new OperationImpossible("La date d’évaluation doit être entre la soumission et la date de décision.");
+
+        // Date actuelle inférieure ou égale à la date de évaluation
+        if (LocalDate.now().isAfter(dateEvaluation)) {
+            throw new OperationImpossible("La date de soumission ne peut pas être dans le passé.");
         }
         
-        // On crée l'évaluation
-        Evaluation evaluation = new Evaluation(evaluateur, avis, rapport, dateEvaluation);
+        // Date d'évaluation dans la période valide
+        if (dateEvaluation.isBefore(dateLimiteSoumission) || 
+            !dateEvaluation.isBefore(dateAnnonceDecisions)) {
+            throw new OperationImpossible("La date d'évaluation doit être entre la soumission et la date de décision.");
+        }
 
-        comm.ajouterEvaluation(evaluation);
+        // Ajout de l'évaluation
+        comm.ajouterEvaluation(evaluateur, avis, rapport, dateEvaluation);
+
         assert invariant();
-    }
+     }
+
     
     /**
      * Permet à la présidente de prendre une décision (acceptée ou refusée) sur une communication.

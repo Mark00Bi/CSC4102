@@ -18,7 +18,6 @@ class TestStream {
     private GCC gcc;
     private Auteur auteur;
     private Evaluateur eval;
-    private Communication comm;
 
     @BeforeEach
     void setUp() throws OperationImpossible {
@@ -46,7 +45,7 @@ class TestStream {
         presidente.ajouterEvaluateur(eval);
         gcc.ajouterEvaluatriceACommunication("c1", "e1");
 
-        gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FAIBLE, "Bon travail");
+        gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FAIBLE, "Bon travail", Datutil.aujourdhui());
     }
 
     @Test

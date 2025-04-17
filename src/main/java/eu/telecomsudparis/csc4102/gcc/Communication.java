@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import eu.telecomsudparis.csc4102.util.OperationImpossible;
-import eu.telecomsudparis.csc4102.gcc.ÉtatCommunication;
-
 
 import java.time.LocalDate;
 
@@ -202,10 +200,20 @@ public class Communication {
      * @param e l'évaluation à ajouter.
      * @throws OperationImpossible si l'évaluation est nulle.
      */
-    public void ajouterEvaluation(final Evaluation e) throws OperationImpossible {
-        if (e == null) {
-            throw new OperationImpossible("Évaluation invalide.");
+    public void ajouterEvaluation(final Evaluateur evaluateur, final Avis avis, final String rapport, final LocalDate dateEvaluation) throws OperationImpossible {
+        if (evaluateur == null) {
+            throw new OperationImpossible("le champs évaluateur ne peut pas être null");
         }
+        if (avis == null) {
+            throw new OperationImpossible("le champs avis ne peut pas être null");
+        }
+    	if (rapport == null || rapport.isBlank()) {
+            throw new OperationImpossible("le champs rapport ne peut pas être null ou vide");
+        }
+        if (dateEvaluation == null) {
+            throw new OperationImpossible("le champs date d'évaluation ne peut pas être null");
+        }
+    	Evaluation e = new Evaluation(evaluateur, avis, rapport, dateEvaluation);
         evaluations.add(e);
         this.etatCommunication = ÉtatCommunication.Evaluée;
         assert invariant();

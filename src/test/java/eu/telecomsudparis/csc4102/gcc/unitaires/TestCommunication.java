@@ -14,7 +14,6 @@ class TestCommunication {
     private Auteur auteur;
     private Evaluateur evaluatrice;
     private Presidente presidente;
-    private Communication comm;
 
     @BeforeEach
     void setUp() {
@@ -28,7 +27,6 @@ class TestCommunication {
         auteur = null;
         evaluatrice = null;
         presidente = null;
-        comm = null;
     }
 
     // === ALGO1C1 : Constructeur Communication ===
