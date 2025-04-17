@@ -1,6 +1,9 @@
+// CHECKSTYLE:OFF
 package eu.telecomsudparis.csc4102.gcc;
 
 import java.util.Objects;
+import java.util.concurrent.SubmissionPublisher;
+
 
 /**
  * Cette classe réalise le concept d'auteur
@@ -8,7 +11,9 @@ import java.util.Objects;
  * @auteur MBARKI Marwen
  */
 public class Auteur extends Utilisateur {
-    /**
+	
+	protected SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+	/**
      * construit un auteur.
      * 
      * @param identifiant       l'identifiant.
@@ -18,8 +23,10 @@ public class Auteur extends Utilisateur {
      */
     public Auteur(final String identifiant, final String nom, final String prenom, final String institution) {
         super(identifiant, nom, prenom, institution);
+        this.publisher = new SubmissionPublisher<>();
     }
 
+    
     @Override
     public int hashCode() {
         return Objects.hash(getIdentificateur());

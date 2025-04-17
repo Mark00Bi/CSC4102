@@ -9,9 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import eu.telecomsudparis.csc4102.util.Datutil;
 import eu.telecomsudparis.csc4102.util.OperationImpossible;
-import eu.telecomsudparis.csc4102.gcc.ÉtatCommunication;
 
 
 /**
@@ -235,6 +233,39 @@ public class GCC {
     }
     
     /**
+     * ajoute un auteur. 
+     * 
+     * @param identificateur    l'identificateur de l'auteur.
+     * @param nom               le nom de l'auteur.
+     * @param prenom            le prénom de l'auteur.
+     * @param institution       l'institution de l'auteur.
+     * @param consommateur   la création d'un consommateur pour gérer les notifications
+     * @throws OperationImpossible en cas de problème sur les pré-conditions.
+     */
+    public void ajouterAuteur(final String identificateur, final String nom, final String prenom,
+    		final String institution, final MonConsommateur consommateur) throws OperationImpossible {
+    	if (identificateur == null || identificateur.isBlank()) {
+            throw new OperationImpossible("identificateur ne peut pas être null ou vide");
+        }
+        if (nom == null || nom.isBlank()) {
+            throw new OperationImpossible("nom ne peut pas être null ou vide");
+        }
+        if (prenom == null || prenom.isBlank()) {
+            throw new OperationImpossible("prenom ne peut pas être null ou vide");
+        }
+        if (institution == null || institution.isBlank()) {
+            throw new OperationImpossible("institution ne peut pas être null ou vide");
+        }
+    	if (utilisateurs.containsKey(identificateur)) {
+    		throw new OperationImpossible("Auteur déjà existant");
+    	}
+    	Auteur auteur = new Auteur(identificateur, nom, prenom, institution);
+    	auteur.subscribe(consommateur);
+    	
+    	utilisateurs.put(identificateur, auteur);
+    }
+    
+    /**
      * Permet à un auteur de soumettre une communication au système.
      * 
      * <p>Cette méthode vérifie la validité des informations de la communication
@@ -275,7 +306,15 @@ public class GCC {
     				|| contenu == null || contenu.isBlank()) {
     			throw new OperationImpossible("Titre, résumé ou contenu non valides.");
     		}
+    		
+    		if (dateSoumission == null) {
+    			throw new OperationImpossible("Date de soumission ne peut pas ếtre null");
+    		}
 
+    		if (LocalDate.now().isAfter(dateSoumission)) {
+    			throw new OperationImpossible("La date de soumission ne peut pas être dans le passé");
+    		}
+    		
     		if (dateSoumission.isAfter(dateLimiteSoumission)) {
     			throw new OperationImpossible("La date de soumission dépasse la date limite.");
     		}
@@ -285,6 +324,13 @@ public class GCC {
     		comm.soumettre();
 
     		communications.put(idComm, comm);
+    		if (auteur instanceof Auteur) {
+    			((Auteur) auteur).notifier("Votre Communication '" + titre + "' a été soumise avec succès.");
+    		}
+    		if (presidente !=null) {
+    			String message = "Nouvelle communication soumise :" + titre;
+    			presidente.notifier(message);
+    		}
     		assert invariant();
     }
 
@@ -356,6 +402,10 @@ public class GCC {
 
         // Affectation
         presidente.affecterEvaluateur(evaluatrice, comm);
+        // Notification après affectation
+        if (evaluatrice instanceof Evaluateur) {
+        	((Evaluateur) evaluatrice).notifier("Vous avez été affectée à la communication : " + comm.getTitre());
+        }
 
         // Si l'ÉtatCommunication est encore Soumise → on passe à En_Evaluation
         if (comm.getEtat().equals(ÉtatCommunication.Soumise)) {
@@ -381,45 +431,62 @@ public class GCC {
      * @param idEvaluateur identifiant de l’évaluatrice.
      * @param avis         l’avis donné par l’évaluatrice (ex. ACCEPTATION_FORTE).
      * @param rapport      le contenu du rapport d’évaluation.
+     * @param dateEvaluation date de l'évaluation.
      * @throws OperationImpossible si une des vérifications échoue.
      */
-    public void ajouterEvaluation(final String idComm, final String idEvaluateur, final Avis avis, final String rapport) throws OperationImpossible {
-        
-    	// On vérifie que la communication existe
-    	if (idComm == null || idComm.isBlank() || !communications.containsKey(idComm)) {
-            throw new OperationImpossible("Communication introuvable.");
-        }
-        Communication comm = communications.get(idComm);
+    public void ajouterEvaluation(final String idComm, final String idEvaluateur, final Avis avis,
+                              final String rapport, final LocalDate dateEvaluation) throws OperationImpossible {
 
-        // On vérifie que l'évaluateur est bien un évaluateur
-        Utilisateur u = utilisateurs.get(idEvaluateur);
-        if (u == null || !(u instanceof Evaluateur)) {
-            throw new OperationImpossible("Évaluateur invalide.");
-        }
-        Evaluateur evaluateur = (Evaluateur) u;
-
-        // On vérifie qu'il y'a un président dans le système
-        if (!presidente.estAssigneA(evaluateur, comm)) {
-            throw new OperationImpossible("L’évaluateur n’est pas affecté à cette communication.");
-        }
-
-        // On vérifie que l'évluation est dans un ÉtatCommunication permettant de l'évaluer
-        if (!comm.getEtat().equals(ÉtatCommunication.En_Evaluation)) {
-            throw new OperationImpossible("La communication n'est pas en cours d'évaluation.");
-        }
-        
-        // On vérifie si on est dans les délais pour effectuer une évaluation
-        LocalDate dateEvaluation = Datutil.aujourdhui();
-        if (dateEvaluation.isBefore(dateLimiteSoumission) || !dateEvaluation.isBefore(dateAnnonceDecisions)) {
-            throw new OperationImpossible("La date d’évaluation doit être entre la soumission et la date de décision.");
-        }
-        
-        // On crée l'évaluation
-        Evaluation evaluation = new Evaluation(evaluateur, avis, rapport, dateEvaluation);
-
-        comm.ajouterEvaluation(evaluation);
-        assert invariant();
+    if (presidente == null) {
+        throw new OperationImpossible("Aucune présidente n’est définie.");
     }
+
+    if (idComm == null || idComm.isBlank() 
+    		|| idEvaluateur == null || idEvaluateur.isBlank()
+    		|| rapport == null || rapport.isBlank() 
+    		|| dateEvaluation == null) {
+        throw new OperationImpossible("Un ou plusieurs paramètres sont invalides (null ou vides).");
+    }
+
+    if (!communications.containsKey(idComm)) {
+        throw new OperationImpossible("Communication introuvable.");
+    }
+
+    Communication comm = communications.get(idComm);
+
+    Utilisateur u = utilisateurs.get(idEvaluateur);
+    if (u == null || !(u instanceof Evaluateur)) {
+        throw new OperationImpossible("Évaluateur invalide.");
+    }
+
+    Evaluateur evaluateur = (Evaluateur) u;
+
+    if (!presidente.estAssigneA(evaluateur, comm)) {
+        throw new OperationImpossible("L’évaluateur n’est pas affecté à cette communication.");
+    }
+
+    if (!comm.getEtat().equals(ÉtatCommunication.En_Evaluation)) {
+        throw new OperationImpossible("La communication n'est pas en cours d'évaluation.");
+    }
+
+    if (LocalDate.now().isAfter(dateEvaluation)) {
+        throw new OperationImpossible("La date de l'évaluation ne peut pas être dans le passé.");
+    }
+
+    if (dateEvaluation.isBefore(dateLimiteSoumission) 
+    		|| !dateEvaluation.isBefore(dateAnnonceDecisions)) {
+        throw new OperationImpossible("La date d’évaluation doit être entre la soumission et la date de décision.");
+    }
+
+    comm.ajouterEvaluation(evaluateur, avis, rapport, dateEvaluation);
+    
+    if(presidente !=null) {
+    	presidente.notifier("Nouvelle évaluation déposée par " + evaluateur.getNom()+" "+
+    	evaluateur.getPrenom() + " sur la communication : " + comm.getTitre());
+    }
+    assert invariant();
+}
+
     
     /**
      * Permet à la présidente de prendre une décision (acceptée ou refusée) sur une communication.
@@ -464,7 +531,17 @@ public class GCC {
     	 throw new OperationImpossible("La décision doit être soit refusée soit acceptée.");
     	 }
     	 
-    	 communications.get(idComm).decider(decision);
+    	 Communication comm = communications.get(idComm);
+    	 comm.decider(decision);
+    	 
+    	 String message = "Décision sur votre communication '" + comm.getTitre() + "' :"
+    			 + decision;
+    	 
+    	 for (Utilisateur auteur : comm.getAuteurs()) {
+    		 if (auteur instanceof Auteur) {
+    			 ((Auteur) auteur).notifier(message);
+    		 }
+    	 }
     	 
     }
     
@@ -476,7 +553,7 @@ public class GCC {
      * @throws OperationImpossible si la communication est introuvable
      */
     
-    public List<String> listerAuteurs(String idComm) throws OperationImpossible {
+    public List<String> listerAuteurs(final String idComm) throws OperationImpossible {
         Communication comm = communications.get(idComm);
         if (comm == null) {
             throw new OperationImpossible("Communication introuvable.");
@@ -495,7 +572,7 @@ public class GCC {
      * @return une liste de représentations textuelles des évaluations
      * @throws OperationImpossible si la communication est introuvable
      */
-    public List<String> listerEvaluations(String idComm) throws OperationImpossible {
+    public List<String> listerEvaluations(final String idComm) throws OperationImpossible {
         Communication comm = communications.get(idComm);
         if (comm == null) {
             throw new OperationImpossible("Communication introuvable.");
@@ -512,7 +589,7 @@ public class GCC {
      * @param comm la communication ciblée
      * @return la liste des identifiants des évaluatrices affectées à cette communication
      */
-    public List<String> getEvaluatricesPourCommunication(Communication comm) {
+    public List<String> getEvaluatricesPourCommunication(final Communication comm) {
         Set<Evaluateur> evaluateurs = presidente.getAffectations().getOrDefault(comm, Set.of());
         return evaluateurs.stream()
                           .map(Evaluateur::getIdentificateur)
@@ -525,7 +602,7 @@ public class GCC {
      * @param titre le titre de la communication à rechercher
      * @return un {@link Optional} contenant la communication si elle est trouvée, vide sinon
      */
-    private Optional<Communication> chercherCommunicationParTitre(String titre) {
+    private Optional<Communication> chercherCommunicationParTitre(final String titre) {
         return communications.values()
                              .stream()
                              .filter(c -> c.getTitre().equalsIgnoreCase(titre))
@@ -539,7 +616,7 @@ public class GCC {
      * @return la communication trouvée
      * @throws OperationImpossible si aucune communication avec ce titre n'existe
      */
-    public Communication getCommunicationParTitre(String titre) throws OperationImpossible {
+    public Communication getCommunicationParTitre(final String titre) throws OperationImpossible {
         return chercherCommunicationParTitre(titre)
                .orElseThrow(() -> new OperationImpossible("Aucune communication avec ce titre."));
     }

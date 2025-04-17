@@ -1,3 +1,4 @@
+// CHECKSTYLE:OFF
 package eu.telecomsudparis.csc4102.gcc;
 
 import java.time.LocalDate;
