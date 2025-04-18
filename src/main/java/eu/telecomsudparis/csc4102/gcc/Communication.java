@@ -194,7 +194,6 @@ public class Communication {
     }
     
     /**
-<<<<<<< HEAD
     * Crée et ajoute une évaluation à la communication, puis met à jour son {@link ÉtatCommunication} à {@code ÉtatCommunication.Evaluée}.
     *
     * <p>

@@ -1,6 +1,6 @@
 
 // CHECKSTYLE:OFF
-package eu.telecomsudparis.csc4102.gcc.unitaires;
+package eu.telecomsudparis.csc4102.gcc.validation;
 
 import eu.telecomsudparis.csc4102.gcc.*;
 import eu.telecomsudparis.csc4102.util.Datutil;

@@ -196,7 +196,7 @@ public class GCC {
         }
 
         // Création de la nouvelle présidente
-        presidente = new Presidente(identificateur, nom, prenom, institution,affectations);
+        presidente = new Presidente(identificateur, nom, prenom, institution, affectations);
         
         // Ajout de la présidente à la collection des utilisateurs
         utilisateurs.put(identificateur, presidente);

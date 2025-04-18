@@ -12,7 +12,6 @@ import java.util.concurrent.SubmissionPublisher;
  */
 public class Auteur extends Utilisateur {
 	
-	protected SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
 	/**
      * construit un auteur.
      * 
