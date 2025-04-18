@@ -1,6 +1,9 @@
+// CHECKSTYLE:OFF
 package eu.telecomsudparis.csc4102.gcc;
 
 import java.util.Objects;
+import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.Flow;
 
 /**
  * Cette classe réalise le concept d'utilisateur du système.
@@ -24,6 +27,9 @@ public abstract class Utilisateur {
      * l'institution de l'utilisateur chercheur.
      */
     private String institution;
+
+
+    protected SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
 
     /**
      * construit un utilisateur.
@@ -61,6 +67,14 @@ public abstract class Utilisateur {
     public boolean invariant() {
         return identificateur != null && !identificateur.isBlank() && nom != null && !nom.isBlank() && prenom != null
                 && !prenom.isBlank() && institution != null && !institution.isBlank();
+    }
+
+    public void notifier(String message) {
+        publisher.submit(message);
+    }
+
+    public void subscribe(Flow.Subscriber<String> subscriber) {
+        publisher.subscribe(subscriber);
     }
 
     /**

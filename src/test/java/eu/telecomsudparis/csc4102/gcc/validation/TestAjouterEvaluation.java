@@ -16,6 +16,7 @@ class TestAjouterEvaluation {
     private GCC gcc;
     private Auteur auteur;
     private Evaluateur eval;
+    private Presidente presidente;
 
     @BeforeEach
     void setUp() throws OperationImpossible {
@@ -41,7 +42,7 @@ class TestAjouterEvaluation {
         gcc.soumettreCommunication("a1", "c1", "Titre", "Résumé", "Contenu", today);
 
         // Ajouter évaluateur au comité et à la communication
-        Presidente presidente = (Presidente) gcc.utilisateurs().get("p1");
+        presidente = (Presidente) gcc.utilisateurs().get("p1");
         presidente.ajouterEvaluateur(eval);
         gcc.ajouterEvaluatriceACommunication("c1", "e1");
     }
@@ -51,6 +52,7 @@ class TestAjouterEvaluation {
         gcc = null;
         auteur = null;
         eval = null;
+        presidente = null;
     }
 
     // Test 1 - Vérifie que l'identifiant évaluateur n'est pas vide
@@ -89,7 +91,7 @@ class TestAjouterEvaluation {
             gcc.ajouterEvaluation("inconnue", "e1", Avis.ACCEPTATION_FORTE, "Rapport", dateEvaluation));
     }
 
-    // Test 5 - Vérifie que l’évaluateur est affecté à la communication
+    // Test 5 - Vérifie que l'évaluateur est affecté à la communication
     @Test
     @DisplayName("TDUC3 - Test 5 : évaluateur non affecté à cette communication")
     void test5_nonAssigne() throws OperationImpossible {
@@ -101,29 +103,29 @@ class TestAjouterEvaluation {
             gcc.ajouterEvaluation("c1", "e2", Avis.ACCEPTATION_FORTE, "Rapport", dateEvaluation));
     }
 
-    // Test 6 - Vérifie que la date d’évaluation n’est pas dans le passé
+    // Test 6 - Vérifie que la date d'évaluation n'est pas dans le passé
     @Test
-    @DisplayName("TDUC3 - Test 6 : date d’évaluation dans le passé")
+    @DisplayName("TDUC3 - Test 6 : date d'évaluation dans le passé")
     void test6_dateSoumissionDansLePasse() {
         LocalDate dateEvaluation = Datutil.ajouterJoursADate(Datutil.aujourdhui(), -1);
         assertThrows(OperationImpossible.class, () ->
             gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FORTE, "Rapport", dateEvaluation));
     }
 
-    // Test 7 - Vérifie que la date d’évaluation est après la soumission
+    // Test 7 - Vérifie que la date d'évaluation est après la soumission
     @Test
-    @DisplayName("TDUC3 - Test 7 : date d’évaluation avant date limite de soumission")
+    @DisplayName("TDUC3 - Test 7 : date d'évaluation avant date limite de soumission")
     void test7_dateAvantSoumission() {
-        LocalDate dateEvaluation = Datutil.ajouterJoursADate(Datutil.aujourdhui(), -1); // date antérieure
+        LocalDate dateEvaluation = Datutil.ajouterJoursADate(Datutil.aujourdhui(), -1);
         assertThrows(OperationImpossible.class, () ->
             gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FORTE, "Trop tôt", dateEvaluation));
     }
 
-    // Test 8 - Vérifie que la date d’évaluation est avant la date d’annonce
+    // Test 8 - Vérifie que la date d'évaluation est avant la date d'annonce
     @Test
-    @DisplayName("TDUC3 - Test 8 : date d’évaluation après date d’annonce")
+    @DisplayName("TDUC3 - Test 8 : date d'évaluation après date d'annonce")
     void test8_dateApresAnnonce() {
-        LocalDate dateEvaluation = Datutil.ajouterJoursADate(Datutil.aujourdhui(), 5); // après la date décision
+        LocalDate dateEvaluation = Datutil.ajouterJoursADate(Datutil.aujourdhui(), 5);
         assertThrows(OperationImpossible.class, () ->
             gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FORTE, "Trop tard", dateEvaluation));
     }
@@ -145,4 +147,29 @@ class TestAjouterEvaluation {
         assertDoesNotThrow(() -> 
             gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FORTE, "Rapport complet", dateEvaluation));
     }
+
+    /*
+    // Test 11 - Vérifie que la présidente est notifiée lors d'une évaluation
+    @Test
+    @DisplayName("TDUC3 - Test 11 : notification à la présidente")
+    void test11_notificationPresidente() throws Exception {
+        // Création d'un consommateur pour capturer les notifications
+        StringBuilder notifications = new StringBuilder();
+        MonConsommateur consommateur = new MonConsommateur() {
+            @Override
+            public void onNext(String message) {
+                notifications.append(message);
+            }
+        };
+        
+        presidente.subscribe(consommateur);
+        
+        // Ajout d'une évaluation
+        gcc.ajouterEvaluation("c1", "e1", Avis.ACCEPTATION_FORTE, "Rapport de test", Datutil.aujourdhui());
+        
+        // Vérification de la notification
+        assertTrue(notifications.toString().contains("Nouvelle évaluation"),
+            "La présidente devrait être notifiée des nouvelles évaluations");
+    }
+    */
 }

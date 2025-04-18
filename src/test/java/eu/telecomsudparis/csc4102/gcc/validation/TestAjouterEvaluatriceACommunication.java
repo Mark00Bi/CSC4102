@@ -156,4 +156,33 @@ class TestAjouterEvaluatriceACommunication {
         presidente.ajouterEvaluateur(eval);
         assertDoesNotThrow(() -> gcc.ajouterEvaluatriceACommunication("c1", "e1"));
     }
+
+    @Test
+@DisplayName("Test10 :Notification envoyée à l'évaluatrice lors de l'affectation")
+void test10_NotificationAffectationEvaluatrice() throws Exception {
+    StringBuilder result = new StringBuilder();
+
+    MonConsommateur customConsumer = new MonConsommateur() {
+        @Override
+        public void onNext(String item) {
+            result.append(item).append("\n");
+            super.onNext(item);
+        }
+    };
+
+    eval.subscribe(customConsumer);
+
+    // Ajout de l’évaluatrice au comité
+    presidente.ajouterEvaluateur(eval);
+
+    // Affecter l’évaluatrice
+    gcc.ajouterEvaluatriceACommunication("c1", "e1");
+
+    // Attendre l’appel asynchrone
+    Thread.sleep(100);
+
+    assertTrue(result.toString().contains("Titre"),
+        "La notification devrait mentionner le titre de la communication.");
+}
+
 }

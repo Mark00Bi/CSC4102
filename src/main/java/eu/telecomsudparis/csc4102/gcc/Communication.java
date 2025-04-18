@@ -120,7 +120,8 @@ public class Communication {
     }
 
     /**
-     * Modifie l'ÉtatCommunication de la communication (utilisé uniquement pour les tests).
+     * Modifie l'ÉtatCommunication de la communication 
+     * Méthode publique uniquement pour les besoins de tests.
      *
      * @param nouvelEtat le nouvel ÉtatCommunication à appliquer à la communication
      * @throws OperationImpossible si l'ÉtatCommunication fourni est nul
@@ -192,14 +193,21 @@ public class Communication {
     }
     
     /**
-     * Ajoute une évaluation à la communication et met à jour son ÉtatCommunication à {@code ÉtatCommunication.Evaluée}.
-     *
-     * <p>Cette méthode ne permet pas d'ajouter une évaluation nulle. Elle modifie également
-     * l'ÉtatCommunication de la communication pour indiquer qu'elle a été évaluée.</p>
-     *
-     * @param e l'évaluation à ajouter.
-     * @throws OperationImpossible si l'évaluation est nulle.
-     */
+<<<<<<< HEAD
+    * Crée et ajoute une évaluation à la communication, puis met à jour son {@link ÉtatCommunication} à {@code ÉtatCommunication.Evaluée}.
+    *
+    * <p>
+    * Cette méthode crée une nouvelle instance de {@link Evaluation} à partir des paramètres fournis
+    * (évaluateur, avis, rapport et date d’évaluation), puis l’ajoute à la communication.
+    * Une fois l’évaluation ajoutée, l’état de la communication est mis à jour pour refléter qu’elle a été évaluée.
+    * </p>
+    *
+    * @param evaluateur l’évaluateur qui a réalisé l’évaluation.
+    * @param avis l’avis rendu (par exemple {@code ACCEPTATION_FORTE}, {@code REFUS}...).
+    * @param rapport le contenu du rapport d’évaluation.
+    * @param dateEvaluation la date à laquelle l’évaluation a été effectuée.
+    * @throws OperationImpossible si l’un des paramètres est {@code null
+    */
     public void ajouterEvaluation(final Evaluateur evaluateur, final Avis avis, final String rapport, final LocalDate dateEvaluation) throws OperationImpossible {
         if (evaluateur == null) {
             throw new OperationImpossible("le champs évaluateur ne peut pas être null");
@@ -218,6 +226,7 @@ public class Communication {
         this.etatCommunication = ÉtatCommunication.Evaluée;
         assert invariant();
     }
+
 
     /**
      * Vérifie si l'invariant de la classe {@code Communication} est respecté.
@@ -243,19 +252,39 @@ public class Communication {
     public String getIdentificateur() {
         return identificateur;
     }
-
+    
+    /**
+     * Retourne le titre de la communication.
+     *
+     * @return le titre de cette communication.
+     */
     public String getTitre() {
         return titre;
     }
 
+    /**
+     * Retourne le resume unique de la communication.
+     *
+     * @return le resume de cette communication.
+     */
     public String getResume() {
         return resume;
     }
 
+    /**
+     * Retourne le contenu de la communication.
+     *
+     * @return le contenu de cette communication.
+     */
     public String getContenu() {
         return contenu;
     }
 
+    /**
+     * Retourne la date de soumission de la communication.
+     *
+     * @return la date de soumission de cette communication.
+     */
     public LocalDate getDateSoumission() {
         return dateSoumission;
     }

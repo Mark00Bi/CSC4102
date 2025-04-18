@@ -168,29 +168,36 @@ public class GCC {
      * @param institution       l'institution de la présidente.
      * @throws OperationImpossible en cas de problème sur les pré-conditions.
      */
-    public void ajouterPresidente(final String identificateur, final String nom, final String prenom,
-            final String institution) throws OperationImpossible {
-        if (identificateur == null || identificateur.isBlank()) {
-            throw new OperationImpossible("identificateur ne peut pas être null ou vide");
+    public void ajouterPresidente(final String identificateur, final String nom, 
+                                 final String prenom, final String institution)
+            throws OperationImpossible {
+        
+        // Tous les champs doivent être non null et non vides
+        if (identificateur == null || identificateur.isBlank() ||
+            nom == null || nom.isBlank() ||
+            prenom == null || prenom.isBlank() ||
+            institution == null || institution.isBlank()) {
+            throw new OperationImpossible("Un ou plusieurs champs requis sont invalides (null ou vides).");
         }
-        if (nom == null || nom.isBlank()) {
-            throw new OperationImpossible("nom ne peut pas être null ou vide");
-        }
-        if (prenom == null || prenom.isBlank()) {
-            throw new OperationImpossible("prenom ne peut pas être null ou vide");
-        }
-        if (institution == null || institution.isBlank()) {
-            throw new OperationImpossible("institution ne peut pas être null ou vide");
-        }
+
+        // Vérification qu'il n'existe pas déjà une présidente dans le système
         if (presidente != null) {
-            throw new OperationImpossible("il y a déjà une présidente");
+            throw new OperationImpossible("Il y a déjà une présidente dans le système.");
         }
+        
+        // Vérification que l'identificateur n'est pas déjà utilisé par un autre utilisateur
         if (utilisateurs.get(identificateur) != null) {
             throw new OperationImpossible(
                     identificateur + " déjà dans les utilisateurs (donc avec un rôle déjà défini)");
         }
+
+        // Création de la nouvelle présidente
         presidente = new Presidente(identificateur, nom, prenom, institution);
+        
+        // Ajout de la présidente à la collection des utilisateurs
         utilisateurs.put(identificateur, presidente);
+        
+        // Vérification de l'invariant de classe (bonne pratique)
         assert invariant();
     }
 
@@ -210,6 +217,39 @@ public class GCC {
 
     public Map<String, Utilisateur> utilisateurs() {
         return utilisateurs;
+    }
+    
+    /**
+     * ajoute un auteur. 
+     * 
+     * @param identificateur    l'identificateur de l'auteur.
+     * @param nom               le nom de l'auteur.
+     * @param prenom            le prénom de l'auteur.
+     * @param institution       l'institution de l'auteur.
+     * @param consommateur   la création d'un consommateur pour gérer les notifications
+     * @throws OperationImpossible en cas de problème sur les pré-conditions.
+     */
+    public void ajouterAuteur(final String identificateur, final String nom, final String prenom,
+    		final String institution, final MonConsommateur consommateur) throws OperationImpossible {
+    	if (identificateur == null || identificateur.isBlank()) {
+            throw new OperationImpossible("identificateur ne peut pas être null ou vide");
+        }
+        if (nom == null || nom.isBlank()) {
+            throw new OperationImpossible("nom ne peut pas être null ou vide");
+        }
+        if (prenom == null || prenom.isBlank()) {
+            throw new OperationImpossible("prenom ne peut pas être null ou vide");
+        }
+        if (institution == null || institution.isBlank()) {
+            throw new OperationImpossible("institution ne peut pas être null ou vide");
+        }
+    	if (utilisateurs.containsKey(identificateur)) {
+    		throw new OperationImpossible("Auteur déjà existant");
+    	}
+    	Auteur auteur = new Auteur(identificateur, nom, prenom, institution);
+    	auteur.subscribe(consommateur);
+    	
+    	utilisateurs.put(identificateur, auteur);
     }
     
     /**
@@ -258,6 +298,7 @@ public class GCC {
         if (communications.containsKey(idComm)) {
             throw new OperationImpossible("Une communication avec cet identifiant existe déjà.");
         }
+
 
         // Date actuelle inférieure ou égale à la date de soumission
         if (LocalDate.now().isAfter(dateSoumission)) {
@@ -354,6 +395,10 @@ public class GCC {
 
         // Affectation
         presidente.affecterEvaluateur(evaluatrice, comm);
+        // Notification après affectation
+        if (evaluatrice instanceof Evaluateur) {
+        	((Evaluateur) evaluatrice).notifier("Vous avez été affectée à la communication : " + comm.getTitre());
+        }
 
         // Activation de l’évaluation si c’est la première affectation
         if (comm.getEtat().equals(ÉtatCommunication.Soumise)) {
@@ -380,8 +425,10 @@ public class GCC {
      * @param idEvaluateur identifiant de l’évaluatrice.
      * @param avis         l’avis donné par l’évaluatrice (ex. ACCEPTATION_FORTE).
      * @param rapport      le contenu du rapport d’évaluation.
+     * @param dateEvaluation date de l'évaluation.
      * @throws OperationImpossible si une des vérifications échoue.
      */
+
      public void ajouterEvaluation(final String idComm, final String idEvaluateur, final Avis avis, 
             final String rapport, final LocalDate dateEvaluation) 
             throws OperationImpossible {
@@ -487,7 +534,17 @@ public class GCC {
     	 throw new OperationImpossible("La décision doit être soit refusée soit acceptée.");
     	 }
     	 
-    	 communications.get(idComm).decider(decision);
+    	 Communication comm = communications.get(idComm);
+    	 comm.decider(decision);
+    	 
+    	 String message = "Décision sur votre communication '" + comm.getTitre() + "' :"
+    			 + decision;
+    	 
+    	 for (Utilisateur auteur : comm.getAuteurs()) {
+    		 if (auteur instanceof Auteur) {
+    			 ((Auteur) auteur).notifier(message);
+    		 }
+    	 }
     	 
     }
     
@@ -499,7 +556,7 @@ public class GCC {
      * @throws OperationImpossible si la communication est introuvable
      */
     
-    public List<String> listerAuteurs(String idComm) throws OperationImpossible {
+    public List<String> listerAuteurs(final String idComm) throws OperationImpossible {
         Communication comm = communications.get(idComm);
         if (comm == null) {
             throw new OperationImpossible("Communication introuvable.");
@@ -518,7 +575,7 @@ public class GCC {
      * @return une liste de représentations textuelles des évaluations
      * @throws OperationImpossible si la communication est introuvable
      */
-    public List<String> listerEvaluations(String idComm) throws OperationImpossible {
+    public List<String> listerEvaluations(final String idComm) throws OperationImpossible {
         Communication comm = communications.get(idComm);
         if (comm == null) {
             throw new OperationImpossible("Communication introuvable.");
@@ -535,7 +592,7 @@ public class GCC {
      * @param comm la communication ciblée
      * @return la liste des identifiants des évaluatrices affectées à cette communication
      */
-    public List<String> getEvaluatricesPourCommunication(Communication comm) {
+    public List<String> getEvaluatricesPourCommunication(final Communication comm) {
         Set<Evaluateur> evaluateurs = presidente.getAffectations().getOrDefault(comm, Set.of());
         return evaluateurs.stream()
                           .map(Evaluateur::getIdentificateur)
@@ -548,7 +605,7 @@ public class GCC {
      * @param titre le titre de la communication à rechercher
      * @return un {@link Optional} contenant la communication si elle est trouvée, vide sinon
      */
-    private Optional<Communication> chercherCommunicationParTitre(String titre) {
+    private Optional<Communication> chercherCommunicationParTitre(final String titre) {
         return communications.values()
                              .stream()
                              .filter(c -> c.getTitre().equalsIgnoreCase(titre))
@@ -562,7 +619,7 @@ public class GCC {
      * @return la communication trouvée
      * @throws OperationImpossible si aucune communication avec ce titre n'existe
      */
-    public Communication getCommunicationParTitre(String titre) throws OperationImpossible {
+    public Communication getCommunicationParTitre(final String titre) throws OperationImpossible {
         return chercherCommunicationParTitre(titre)
                .orElseThrow(() -> new OperationImpossible("Aucune communication avec ce titre."));
     }
