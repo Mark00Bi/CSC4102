@@ -316,6 +316,15 @@ public class GCC {
 
         communications.put(idComm, comm);
 
+        // Notifier l'auteur
+        String messageAuteur = "Votre communication '" + titre + "' a été soumise avec succès.";
+        ((Auteur) auteur).notifier(messageAuteur);
+
+        // Notifier la presidente
+        if (presidente != null) {
+            presidente.notifier("Nouvelle communication soumise : " + titre);
+        }
+
         assert invariant();
     }
 
@@ -486,6 +495,12 @@ public class GCC {
 
         // Ajout de l'évaluation
         comm.ajouterEvaluation(evaluateur, avis, rapport, dateEvaluation);
+
+        //  Notifier la présidente
+        if (presidente != null) {
+            String notifPres = "Nouvelle évaluation pour la communication : " + comm.getTitre();
+            presidente.notifier(notifPres);
+        }
 
         assert invariant();
      }
