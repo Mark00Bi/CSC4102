@@ -59,6 +59,11 @@ public class GCC {
      * les communications.
      */
     private final Map<String, Communication> communications;
+    
+    /**
+     * les affectations.
+     */
+    private Map<Communication, Set<Evaluateur>> affectations = new HashMap<>();
 
     /**
      * construit une instance du système.
@@ -173,10 +178,9 @@ public class GCC {
             throws OperationImpossible {
         
         // Tous les champs doivent être non null et non vides
-        if (identificateur == null || identificateur.isBlank() ||
-            nom == null || nom.isBlank() ||
-            prenom == null || prenom.isBlank() ||
-            institution == null || institution.isBlank()) {
+        if (identificateur == null || identificateur.isBlank() 
+        	|| nom == null || nom.isBlank() || prenom == null 
+        	|| prenom.isBlank() || institution == null || institution.isBlank()) {
             throw new OperationImpossible("Un ou plusieurs champs requis sont invalides (null ou vides).");
         }
 
@@ -192,7 +196,7 @@ public class GCC {
         }
 
         // Création de la nouvelle présidente
-        presidente = new Presidente(identificateur, nom, prenom, institution);
+        presidente = new Presidente(identificateur, nom, prenom, institution,affectations);
         
         // Ajout de la présidente à la collection des utilisateurs
         utilisateurs.put(identificateur, presidente);
@@ -277,12 +281,10 @@ public class GCC {
             final LocalDate dateSoumission) throws OperationImpossible {
 
         // Vérification groupée des champs requis (non null et non vides)
-        if (idAuteur == null || idAuteur.isBlank() ||
-            idComm == null || idComm.isBlank() ||
-            titre == null || titre.isBlank() ||
-            resume == null || resume.isBlank() ||
-            contenu == null || contenu.isBlank() ||
-            dateSoumission == null) {
+        if (idAuteur == null || idAuteur.isBlank() 
+        	|| idComm == null || idComm.isBlank() || titre == null || titre.isBlank() 
+        	|| resume == null || resume.isBlank() || contenu == null || contenu.isBlank() 
+        	|| dateSoumission == null) {
             
             throw new OperationImpossible("Un ou plusieurs champs requis sont invalides (null ou vides).");
         }
@@ -362,8 +364,8 @@ public class GCC {
         }
 
         // Vérification groupée des paramètres requis
-        if (idCommunication == null || idCommunication.isBlank() ||
-            idEvaluatrice == null || idEvaluatrice.isBlank()) {
+        if (idCommunication == null || idCommunication.isBlank() 
+        	|| idEvaluatrice == null || idEvaluatrice.isBlank()) {
             throw new OperationImpossible("Un ou plusieurs identifiants sont invalides (null ou vides).");
         }
 
@@ -374,8 +376,8 @@ public class GCC {
         }
 
         // Communication dans un état valide
-        if (!(comm.getEtat().equals(ÉtatCommunication.Soumise) || 
-              comm.getEtat().equals(ÉtatCommunication.En_Evaluation))) {
+        if (!(comm.getEtat().equals(ÉtatCommunication.Soumise)
+        		|| comm.getEtat().equals(ÉtatCommunication.En_Evaluation))) {
             throw new OperationImpossible("La communication n'est pas dans un état permettant d'ajouter une évaluatrice.");
         }
 
@@ -442,10 +444,10 @@ public class GCC {
         }
 
         // Vérification groupée des champs requis (non null / non vides)
-        if (idComm == null || idComm.isBlank() ||
-            idEvaluateur == null || idEvaluateur.isBlank() ||
-            rapport == null || rapport.isBlank() ||
-            dateEvaluation == null) {
+        if (idComm == null || idComm.isBlank() 
+        	|| idEvaluateur == null || idEvaluateur.isBlank() 
+        	|| rapport == null || rapport.isBlank() 
+        	|| dateEvaluation == null) {
             throw new OperationImpossible("Un ou plusieurs paramètres sont invalides (null ou vides).");
         }
 
@@ -482,8 +484,8 @@ public class GCC {
         }
         
         // Date d'évaluation dans la période valide
-        if (dateEvaluation.isBefore(dateLimiteSoumission) || 
-            !dateEvaluation.isBefore(dateAnnonceDecisions)) {
+        if (dateEvaluation.isBefore(dateLimiteSoumission) 
+        	|| !dateEvaluation.isBefore(dateAnnonceDecisions)) {
             throw new OperationImpossible("La date d'évaluation doit être entre la soumission et la date de décision.");
         }
 

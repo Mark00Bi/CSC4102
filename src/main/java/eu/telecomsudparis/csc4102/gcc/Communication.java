@@ -144,7 +144,7 @@ public class Communication {
      * @throws OperationImpossible si la communication n'est pas dans l'ÉtatCommunication {@code Brouillon}
      */
     
-    public void soumettre(Utilisateur auteur) throws OperationImpossible {
+    public void soumettre(final Utilisateur auteur) throws OperationImpossible {
     	if (etatCommunication != ÉtatCommunication.Brouillon) {
     		throw new OperationImpossible("La communication doit être en ÉtatCommunication brouillon pour être soumise");
     	}

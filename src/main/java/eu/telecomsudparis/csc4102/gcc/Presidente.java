@@ -1,7 +1,6 @@
 // CHECKSTYLE:OFF
 package eu.telecomsudparis.csc4102.gcc;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -24,9 +23,10 @@ public class Presidente extends Evaluateur {
      * @param institution       l'institution de la présidente.
      */
 	private Set<Evaluateur> evaluateurs = new HashSet<>();
-	private Map<Communication, Set<Evaluateur>> affectations = new HashMap<>();
-    public Presidente(final String identifiant, final String nom, final String prenom, final String institution) {
+	private Map<Communication, Set<Evaluateur>> affectations ;
+    public Presidente(final String identifiant, final String nom, final String prenom, final String institution,final Map<Communication, Set<Evaluateur>> affectations ) {
         super(identifiant, nom, prenom, institution);
+        this.affectations = affectations;
     }
 
     @Override

@@ -6,6 +6,9 @@ import eu.telecomsudparis.csc4102.util.OperationImpossible;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,9 +20,10 @@ class TestCommunication {
 
     @BeforeEach
     void setUp() {
-        auteur = new Auteur("a1", "Nom", "Prenom", "Institution");
+    	Map<Communication, Set<Evaluateur>> affectations = new HashMap<>();
+    	auteur = new Auteur("a1", "Nom", "Prenom", "Institution");
         evaluatrice = new Evaluateur("e1", "Eva", "Luatrice", "INRIA");
-        presidente = new Presidente("p1", "Mme", "Prez", "IMT");
+        presidente = new Presidente("p1", "Mme", "Prez", "IMT",affectations);
     }
 
     @AfterEach
