@@ -76,7 +76,7 @@ class TestCommunication {
     @DisplayName("ajouterEvaluatrice - Evaluatrice non membre du comité → exception")
     void testAjouterEvaluatriceNonDansComite() throws OperationImpossible {
         Communication c = new Communication("c1", "Titre", "Résumé", "Contenu", LocalDate.now());
-        c.soumettre();
+        c.soumettre(auteur);
         // Evaluatrice non ajoutée au comité
         assertFalse(presidente.contientEvaluateur(evaluatrice));
         assertThrows(OperationImpossible.class, () -> {
@@ -91,7 +91,7 @@ class TestCommunication {
     void testAjouterEvaluatriceEstAutrice() throws OperationImpossible {
         Communication c = new Communication("c1", "Titre", "Résumé", "Contenu", LocalDate.now());
         c.ajouterAuteurs(evaluatrice);
-        c.soumettre();
+        c.soumettre(auteur);
         presidente.ajouterEvaluateur(evaluatrice);
         assertThrows(OperationImpossible.class, () -> {
             if (c.getAuteurs().contains(evaluatrice)) {
@@ -117,8 +117,7 @@ class TestCommunication {
     @DisplayName("ajouterEvaluatrice - Tout est valide → succès")
     void testAjouterEvaluatriceValide() throws OperationImpossible {
         Communication c = new Communication("c1", "Titre", "Résumé", "Contenu", LocalDate.now());
-        c.ajouterAuteurs(auteur);
-        c.soumettre();
+        c.soumettre(auteur);
         presidente.ajouterEvaluateur(evaluatrice);
         assertFalse(presidente.estAssigneA(evaluatrice, c));
         presidente.affecterEvaluateur(evaluatrice, c);

@@ -63,6 +63,9 @@ public class Presidente extends Evaluateur {
             throw new OperationImpossible("L’évaluateur ou la communication ne peut pas être null.");
         }
         affectations.computeIfAbsent(c, k -> new HashSet<>()).add(e);
+        if (c.getEtat() == ÉtatCommunication.Soumise) {
+            c.activerEvaluation(); // responsable du changement d'état
+        }
     }
     
     

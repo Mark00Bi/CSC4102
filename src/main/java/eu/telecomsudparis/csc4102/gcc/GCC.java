@@ -311,8 +311,7 @@ public class GCC {
 
         // Création et soumission
         Communication comm = new Communication(idComm, titre, resume, contenu, dateSoumission);
-        comm.ajouterAuteurs(auteur);
-        comm.soumettre();
+        comm.soumettre(auteur);
 
         communications.put(idComm, comm);
 
@@ -407,11 +406,6 @@ public class GCC {
         // Notification après affectation
         if (evaluatrice instanceof Evaluateur) {
         	((Evaluateur) evaluatrice).notifier("Vous avez été affectée à la communication : " + comm.getTitre());
-        }
-
-        // Activation de l’évaluation si c’est la première affectation
-        if (comm.getEtat().equals(ÉtatCommunication.Soumise)) {
-            comm.activerEvaluation();
         }
 
         assert invariant();

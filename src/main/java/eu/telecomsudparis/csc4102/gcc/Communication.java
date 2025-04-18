@@ -140,14 +140,15 @@ public class Communication {
      * <p>
      * Change l'ÉtatCommunication de la communication de {@code Brouillon} à {@code Soumise}.
      * </p>
-     *
+     *@param auteur l'auteur de la communication  
      * @throws OperationImpossible si la communication n'est pas dans l'ÉtatCommunication {@code Brouillon}
      */
     
-    public void soumettre() throws OperationImpossible {
+    public void soumettre(Utilisateur auteur) throws OperationImpossible {
     	if (etatCommunication != ÉtatCommunication.Brouillon) {
     		throw new OperationImpossible("La communication doit être en ÉtatCommunication brouillon pour être soumise");
     	}
+        this.ajouterAuteurs(auteur);
     	this.etatCommunication = ÉtatCommunication.Soumise;
     	assert invariant();
     }
